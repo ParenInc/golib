@@ -1,0 +1,13 @@
+all: false
+dir: '{{.InterfaceDir}}/mocks'
+filename: '{{.InterfaceName}}.go'
+structname: '{{.Mock}}{{.InterfaceName}}'
+pkgname: mocks
+template: testify
+template-data:
+  unroll-variadic: true
+packages:
+  github.com/pareninc/golib/nats:
+    interfaces:
+      Consumer:
+      Producer:
