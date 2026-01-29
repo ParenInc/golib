@@ -13,7 +13,7 @@ type Client struct {
 	js   jetstream.JetStream
 }
 
-func NewClient(config Configuration, logger logger.Logger) (*Client, error) {
+func NewClient(config Configuration, logger *logger.Logger) (*Client, error) {
 	reconnectDelay := time.Second
 
 	opts := []nats.Option{}
