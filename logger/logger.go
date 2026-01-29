@@ -69,6 +69,10 @@ func (l *Logger) Errorf(format string, args ...any) {
 	l.logger.Errorf(format, args...)
 }
 
+func (l *Logger) Fatalf(format string, args ...any) {
+	l.logger.Fatalf(format, args...)
+}
+
 func (l *Logger) Debug(args ...any) {
 	l.logger.Debug(args...)
 }
@@ -83,4 +87,8 @@ func (l *Logger) Warn(args ...any) {
 
 func (l *Logger) Error(args ...any) {
 	l.logger.Error(args...)
+}
+
+func (l *Logger) Fatal(args ...any) {
+	l.logger.Fatal(args...)
 }
