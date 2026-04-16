@@ -29,6 +29,10 @@ func NewClient(config Configuration, logger logger.Logger) (*Client, error) {
 		logger.Error("Exiting, no servers available")
 	}))
 
+	if config.User != "" && config.Password != "" {
+		opts = append(opts, nats.UserInfo(config.User, config.Password))
+	}
+
 	// connect to nats server
 	nc, err := nats.Connect(config.URL, opts...)
 	if err != nil {

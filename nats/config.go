@@ -1,5 +1,7 @@
 package nats
 
 type Configuration struct {
-	URL string
+	URL      string
+	User     string
+	Password string
 }
