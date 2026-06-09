@@ -104,6 +104,55 @@ func (_c *MockProducer_CreateOrUpdateStream_Call) RunAndReturn(run func(streamNa
 	return _c
 }
 
+// EnsureStreamExists provides a mock function for the type MockProducer
+func (_mock *MockProducer) EnsureStreamExists(streamName string) error {
+	ret := _mock.Called(streamName)
+
+	if len(ret) == 0 {
+		panic("no return value specified for EnsureStreamExists")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(string) error); ok {
+		r0 = returnFunc(streamName)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// MockProducer_EnsureStreamExists_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'EnsureStreamExists'
+type MockProducer_EnsureStreamExists_Call struct {
+	*mock.Call
+}
+
+// EnsureStreamExists is a helper method to define mock.On call
+//   - streamName string
+func (_e *MockProducer_Expecter) EnsureStreamExists(streamName interface{}) *MockProducer_EnsureStreamExists_Call {
+	return &MockProducer_EnsureStreamExists_Call{Call: _e.mock.On("EnsureStreamExists", streamName)}
+}
+
+func (_c *MockProducer_EnsureStreamExists_Call) Run(run func(streamName string)) *MockProducer_EnsureStreamExists_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 string
+		if args[0] != nil {
+			arg0 = args[0].(string)
+		}
+		run(arg0)
+	})
+	return _c
+}
+
+func (_c *MockProducer_EnsureStreamExists_Call) Return(err error) *MockProducer_EnsureStreamExists_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *MockProducer_EnsureStreamExists_Call) RunAndReturn(run func(streamName string) error) *MockProducer_EnsureStreamExists_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Publish provides a mock function for the type MockProducer
 func (_mock *MockProducer) Publish(subject string, data []byte) error {
 	ret := _mock.Called(subject, data)
