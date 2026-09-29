@@ -8,6 +8,7 @@ import (
 	"context"
 
 	"github.com/nats-io/nats.go/jetstream"
+	"github.com/pareninc/golib/nats"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -224,8 +225,8 @@ func (_c *MockProducer_Publish_Call) RunAndReturn(run func(subject string, data 
 }
 
 // PublishAsync provides a mock function for the type MockProducer
-func (_mock *MockProducer) PublishAsync(subject string, data []byte, opts ...jetstream.PublishOpt) (jetstream.PubAckFuture, error) {
-	// jetstream.PublishOpt
+func (_mock *MockProducer) PublishAsync(subject string, data []byte, opts ...nats.PublishOption) (jetstream.PubAckFuture, error) {
+	// nats.PublishOption
 	_va := make([]any, len(opts))
 	for _i := range opts {
 		_va[_i] = opts[_i]
@@ -241,17 +242,17 @@ func (_mock *MockProducer) PublishAsync(subject string, data []byte, opts ...jet
 
 	var r0 jetstream.PubAckFuture
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(string, []byte, ...jetstream.PublishOpt) (jetstream.PubAckFuture, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(string, []byte, ...nats.PublishOption) (jetstream.PubAckFuture, error)); ok {
 		return returnFunc(subject, data, opts...)
 	}
-	if returnFunc, ok := ret.Get(0).(func(string, []byte, ...jetstream.PublishOpt) jetstream.PubAckFuture); ok {
+	if returnFunc, ok := ret.Get(0).(func(string, []byte, ...nats.PublishOption) jetstream.PubAckFuture); ok {
 		r0 = returnFunc(subject, data, opts...)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(jetstream.PubAckFuture)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(string, []byte, ...jetstream.PublishOpt) error); ok {
+	if returnFunc, ok := ret.Get(1).(func(string, []byte, ...nats.PublishOption) error); ok {
 		r1 = returnFunc(subject, data, opts...)
 	} else {
 		r1 = ret.Error(1)
@@ -267,13 +268,13 @@ type MockProducer_PublishAsync_Call struct {
 // PublishAsync is a helper method to define mock.On call
 //   - subject string
 //   - data []byte
-//   - opts ...jetstream.PublishOpt
+//   - opts ...nats.PublishOption
 func (_e *MockProducer_Expecter) PublishAsync(subject any, data any, opts ...any) *MockProducer_PublishAsync_Call {
 	return &MockProducer_PublishAsync_Call{Call: _e.mock.On("PublishAsync",
 		append([]any{subject, data}, opts...)...)}
 }
 
-func (_c *MockProducer_PublishAsync_Call) Run(run func(subject string, data []byte, opts ...jetstream.PublishOpt)) *MockProducer_PublishAsync_Call {
+func (_c *MockProducer_PublishAsync_Call) Run(run func(subject string, data []byte, opts ...nats.PublishOption)) *MockProducer_PublishAsync_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 string
 		if args[0] != nil {
@@ -283,11 +284,11 @@ func (_c *MockProducer_PublishAsync_Call) Run(run func(subject string, data []by
 		if args[1] != nil {
 			arg1 = args[1].([]byte)
 		}
-		var arg2 []jetstream.PublishOpt
-		variadicArgs := make([]jetstream.PublishOpt, len(args)-2)
+		var arg2 []nats.PublishOption
+		variadicArgs := make([]nats.PublishOption, len(args)-2)
 		for i, a := range args[2:] {
 			if a != nil {
-				variadicArgs[i] = a.(jetstream.PublishOpt)
+				variadicArgs[i] = a.(nats.PublishOption)
 			}
 		}
 		arg2 = variadicArgs
@@ -305,14 +306,14 @@ func (_c *MockProducer_PublishAsync_Call) Return(pubAckFuture jetstream.PubAckFu
 	return _c
 }
 
-func (_c *MockProducer_PublishAsync_Call) RunAndReturn(run func(subject string, data []byte, opts ...jetstream.PublishOpt) (jetstream.PubAckFuture, error)) *MockProducer_PublishAsync_Call {
+func (_c *MockProducer_PublishAsync_Call) RunAndReturn(run func(subject string, data []byte, opts ...nats.PublishOption) (jetstream.PubAckFuture, error)) *MockProducer_PublishAsync_Call {
 	_c.Call.Return(run)
 	return _c
 }
 
 // PublishWithContext provides a mock function for the type MockProducer
-func (_mock *MockProducer) PublishWithContext(ctx context.Context, subject string, data []byte, opts ...jetstream.PublishOpt) (*jetstream.PubAck, error) {
-	// jetstream.PublishOpt
+func (_mock *MockProducer) PublishWithContext(ctx context.Context, subject string, data []byte, opts ...nats.PublishOption) (*jetstream.PubAck, error) {
+	// nats.PublishOption
 	_va := make([]any, len(opts))
 	for _i := range opts {
 		_va[_i] = opts[_i]
@@ -328,17 +329,17 @@ func (_mock *MockProducer) PublishWithContext(ctx context.Context, subject strin
 
 	var r0 *jetstream.PubAck
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, []byte, ...jetstream.PublishOpt) (*jetstream.PubAck, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, []byte, ...nats.PublishOption) (*jetstream.PubAck, error)); ok {
 		return returnFunc(ctx, subject, data, opts...)
 	}
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string, []byte, ...jetstream.PublishOpt) *jetstream.PubAck); ok {
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, []byte, ...nats.PublishOption) *jetstream.PubAck); ok {
 		r0 = returnFunc(ctx, subject, data, opts...)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*jetstream.PubAck)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, string, []byte, ...jetstream.PublishOpt) error); ok {
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string, []byte, ...nats.PublishOption) error); ok {
 		r1 = returnFunc(ctx, subject, data, opts...)
 	} else {
 		r1 = ret.Error(1)
@@ -355,13 +356,13 @@ type MockProducer_PublishWithContext_Call struct {
 //   - ctx context.Context
 //   - subject string
 //   - data []byte
-//   - opts ...jetstream.PublishOpt
+//   - opts ...nats.PublishOption
 func (_e *MockProducer_Expecter) PublishWithContext(ctx any, subject any, data any, opts ...any) *MockProducer_PublishWithContext_Call {
 	return &MockProducer_PublishWithContext_Call{Call: _e.mock.On("PublishWithContext",
 		append([]any{ctx, subject, data}, opts...)...)}
 }
 
-func (_c *MockProducer_PublishWithContext_Call) Run(run func(ctx context.Context, subject string, data []byte, opts ...jetstream.PublishOpt)) *MockProducer_PublishWithContext_Call {
+func (_c *MockProducer_PublishWithContext_Call) Run(run func(ctx context.Context, subject string, data []byte, opts ...nats.PublishOption)) *MockProducer_PublishWithContext_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -375,11 +376,11 @@ func (_c *MockProducer_PublishWithContext_Call) Run(run func(ctx context.Context
 		if args[2] != nil {
 			arg2 = args[2].([]byte)
 		}
-		var arg3 []jetstream.PublishOpt
-		variadicArgs := make([]jetstream.PublishOpt, len(args)-3)
+		var arg3 []nats.PublishOption
+		variadicArgs := make([]nats.PublishOption, len(args)-3)
 		for i, a := range args[3:] {
 			if a != nil {
-				variadicArgs[i] = a.(jetstream.PublishOpt)
+				variadicArgs[i] = a.(nats.PublishOption)
 			}
 		}
 		arg3 = variadicArgs
@@ -398,7 +399,7 @@ func (_c *MockProducer_PublishWithContext_Call) Return(pubAck *jetstream.PubAck,
 	return _c
 }
 
-func (_c *MockProducer_PublishWithContext_Call) RunAndReturn(run func(ctx context.Context, subject string, data []byte, opts ...jetstream.PublishOpt) (*jetstream.PubAck, error)) *MockProducer_PublishWithContext_Call {
+func (_c *MockProducer_PublishWithContext_Call) RunAndReturn(run func(ctx context.Context, subject string, data []byte, opts ...nats.PublishOption) (*jetstream.PubAck, error)) *MockProducer_PublishWithContext_Call {
 	_c.Call.Return(run)
 	return _c
 }

@@ -16,12 +16,15 @@ type Logger interface {
 }
 
 type Client struct {
-	conn *nats.Conn
-	js   jetstream.JetStream
+	conn        *nats.Conn
+	js          jetstream.JetStream
+	logger      Logger
+	retryPolicy RetryPolicy
 }
 
 type clientOptions struct {
-	jsOpts []jetstream.JetStreamOpt
+	jsOpts      []jetstream.JetStreamOpt
+	retryPolicy RetryPolicy
 }
 
 // Option customizes the client created by NewClient.
@@ -36,7 +39,7 @@ func WithJetStreamOptions(opts ...jetstream.JetStreamOpt) Option {
 }
 
 func NewClient(config Configuration, logger Logger, opts ...Option) (*Client, error) {
-	options := clientOptions{}
+	options := clientOptions{retryPolicy: DefaultRetryPolicy}
 	for _, opt := range opts {
 		opt(&options)
 	}
@@ -66,16 +69,26 @@ func NewClient(config Configuration, logger Logger, opts ...Option) (*Client, er
 		return nil, err
 	}
 
+	// Async publishes wait forever for a lost ack unless given a timeout, which
+	// would also prevent them from being retried. Caller options come after so
+	// they can override it.
+	jsOpts := options.jsOpts
+	if options.retryPolicy.AttemptTimeout > 0 {
+		jsOpts = append([]jetstream.JetStreamOpt{jetstream.WithPublishAsyncTimeout(options.retryPolicy.AttemptTimeout)}, jsOpts...)
+	}
+
 	// create jetstream context from nats connection
-	js, err := jetstream.New(nc, options.jsOpts...)
+	js, err := jetstream.New(nc, jsOpts...)
 	if err != nil {
 		nc.Close()
 		return nil, err
 	}
 
 	return &Client{
-		conn: nc,
-		js:   js,
+		conn:        nc,
+		js:          js,
+		logger:      logger,
+		retryPolicy: options.retryPolicy,
 	}, nil
 }
 
