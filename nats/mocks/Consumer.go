@@ -5,6 +5,8 @@
 package mocks
 
 import (
+	"context"
+
 	"github.com/nats-io/nats.go/jetstream"
 	mock "github.com/stretchr/testify/mock"
 )
@@ -15,10 +17,19 @@ func NewMockConsumer(t interface {
 	mock.TestingT
 	Cleanup(func())
 }) *MockConsumer {
+	if helper, ok := t.(interface{ Helper() }); ok {
+		helper.Helper()
+	}
+
 	mock := &MockConsumer{}
 	mock.Mock.Test(t)
 
-	t.Cleanup(func() { mock.AssertExpectations(t) })
+	t.Cleanup(func() {
+		if helper, ok := t.(interface{ Helper() }); ok {
+			helper.Helper()
+		}
+		mock.AssertExpectations(t)
+	})
 
 	return mock
 }
@@ -73,7 +84,7 @@ type MockConsumer_CreateConsumer_Call struct {
 //   - stream string
 //   - durable string
 //   - subjects []string
-func (_e *MockConsumer_Expecter) CreateConsumer(stream interface{}, durable interface{}, subjects interface{}) *MockConsumer_CreateConsumer_Call {
+func (_e *MockConsumer_Expecter) CreateConsumer(stream any, durable any, subjects any) *MockConsumer_CreateConsumer_Call {
 	return &MockConsumer_CreateConsumer_Call{Call: _e.mock.On("CreateConsumer", stream, durable, subjects)}
 }
 
@@ -106,6 +117,80 @@ func (_c *MockConsumer_CreateConsumer_Call) Return(consumer jetstream.Consumer, 
 }
 
 func (_c *MockConsumer_CreateConsumer_Call) RunAndReturn(run func(stream string, durable string, subjects []string) (jetstream.Consumer, error)) *MockConsumer_CreateConsumer_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// CreateOrUpdateConsumer provides a mock function for the type MockConsumer
+func (_mock *MockConsumer) CreateOrUpdateConsumer(ctx context.Context, stream string, config jetstream.ConsumerConfig) (jetstream.Consumer, error) {
+	ret := _mock.Called(ctx, stream, config)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CreateOrUpdateConsumer")
+	}
+
+	var r0 jetstream.Consumer
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, jetstream.ConsumerConfig) (jetstream.Consumer, error)); ok {
+		return returnFunc(ctx, stream, config)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, jetstream.ConsumerConfig) jetstream.Consumer); ok {
+		r0 = returnFunc(ctx, stream, config)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(jetstream.Consumer)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string, jetstream.ConsumerConfig) error); ok {
+		r1 = returnFunc(ctx, stream, config)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockConsumer_CreateOrUpdateConsumer_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CreateOrUpdateConsumer'
+type MockConsumer_CreateOrUpdateConsumer_Call struct {
+	*mock.Call
+}
+
+// CreateOrUpdateConsumer is a helper method to define mock.On call
+//   - ctx context.Context
+//   - stream string
+//   - config jetstream.ConsumerConfig
+func (_e *MockConsumer_Expecter) CreateOrUpdateConsumer(ctx any, stream any, config any) *MockConsumer_CreateOrUpdateConsumer_Call {
+	return &MockConsumer_CreateOrUpdateConsumer_Call{Call: _e.mock.On("CreateOrUpdateConsumer", ctx, stream, config)}
+}
+
+func (_c *MockConsumer_CreateOrUpdateConsumer_Call) Run(run func(ctx context.Context, stream string, config jetstream.ConsumerConfig)) *MockConsumer_CreateOrUpdateConsumer_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 jetstream.ConsumerConfig
+		if args[2] != nil {
+			arg2 = args[2].(jetstream.ConsumerConfig)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *MockConsumer_CreateOrUpdateConsumer_Call) Return(consumer jetstream.Consumer, err error) *MockConsumer_CreateOrUpdateConsumer_Call {
+	_c.Call.Return(consumer, err)
+	return _c
+}
+
+func (_c *MockConsumer_CreateOrUpdateConsumer_Call) RunAndReturn(run func(ctx context.Context, stream string, config jetstream.ConsumerConfig) (jetstream.Consumer, error)) *MockConsumer_CreateOrUpdateConsumer_Call {
 	_c.Call.Return(run)
 	return _c
 }
