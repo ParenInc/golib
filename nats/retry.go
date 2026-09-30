@@ -97,7 +97,7 @@ func publishWithRetry(ctx context.Context, policy RetryPolicy, publish func(cont
 		onRetry(attempt, err)
 		select {
 		case <-ctx.Done():
-			return nil, err
+			return nil, ctx.Err()
 		case <-time.After(policy.backoff(attempt)):
 		}
 	}
