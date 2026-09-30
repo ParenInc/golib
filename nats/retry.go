@@ -68,6 +68,7 @@ func isRetryable(err error) bool {
 	return errors.Is(err, context.DeadlineExceeded) ||
 		errors.Is(err, nats.ErrTimeout) ||
 		errors.Is(err, nats.ErrNoResponders) ||
+		errors.Is(err, nats.ErrDisconnected) ||
 		errors.Is(err, jetstream.ErrNoStreamResponse)
 }
 
