@@ -11,7 +11,8 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 )
 
-// RetryPolicy controls how publishes carrying an idempotency key are retried.
+// RetryPolicy controls how synchronous publishes carrying an idempotency key
+// are retried.
 // Retries reuse the same key, so the stream drops any copy that was stored
 // despite the timeout; keep the total retry duration well under the stream's
 // Duplicates window.
@@ -67,8 +68,7 @@ func isRetryable(err error) bool {
 	return errors.Is(err, context.DeadlineExceeded) ||
 		errors.Is(err, nats.ErrTimeout) ||
 		errors.Is(err, nats.ErrNoResponders) ||
-		errors.Is(err, jetstream.ErrNoStreamResponse) ||
-		errors.Is(err, jetstream.ErrAsyncPublishTimeout)
+		errors.Is(err, jetstream.ErrNoStreamResponse)
 }
 
 type retryFunc func(attempt int, err error)
@@ -99,60 +99,6 @@ func publishWithRetry(ctx context.Context, policy RetryPolicy, publish func(cont
 		case <-ctx.Done():
 			return nil, err
 		case <-time.After(policy.backoff(attempt)):
-		}
-	}
-}
-
-// retryingFuture is a jetstream.PubAckFuture that republishes when the
-// underlying async publish fails with a retryable error.
-type retryingFuture struct {
-	msg   *nats.Msg
-	okCh  chan *jetstream.PubAck
-	errCh chan error
-}
-
-func (f *retryingFuture) Ok() <-chan *jetstream.PubAck { return f.okCh }
-func (f *retryingFuture) Err() <-chan error            { return f.errCh }
-func (f *retryingFuture) Msg() *nats.Msg               { return f.msg }
-
-// newRetryingFuture resolves first, republishing via republish on retryable
-// errors. Every attempt must have an ack timeout, otherwise a lost ack never
-// resolves.
-func newRetryingFuture(first jetstream.PubAckFuture, policy RetryPolicy, republish func() (jetstream.PubAckFuture, error), onRetry retryFunc) *retryingFuture {
-	f := &retryingFuture{
-		msg:   first.Msg(),
-		okCh:  make(chan *jetstream.PubAck, 1),
-		errCh: make(chan error, 1),
-	}
-	go f.run(first, policy, republish, onRetry)
-	return f
-}
-
-func (f *retryingFuture) run(current jetstream.PubAckFuture, policy RetryPolicy, republish func() (jetstream.PubAckFuture, error), onRetry retryFunc) {
-	attempts := policy.attempts()
-	for attempt := 1; ; attempt++ {
-		select {
-		case ack := <-current.Ok():
-			f.okCh <- ack
-			return
-		case err := <-current.Err():
-			if !isRetryable(err) {
-				f.errCh <- err
-				return
-			}
-			if attempt >= attempts {
-				f.errCh <- fmt.Errorf("publish failed after %d attempts: %w", attempts, err)
-				return
-			}
-
-			onRetry(attempt, err)
-			time.Sleep(policy.backoff(attempt))
-			next, err := republish()
-			if err != nil {
-				f.errCh <- err
-				return
-			}
-			current = next
 		}
 	}
 }

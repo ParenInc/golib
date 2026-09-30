@@ -69,16 +69,8 @@ func NewClient(config Configuration, logger Logger, opts ...Option) (*Client, er
 		return nil, err
 	}
 
-	// Async publishes wait forever for a lost ack unless given a timeout, which
-	// would also prevent them from being retried. Caller options come after so
-	// they can override it.
-	jsOpts := options.jsOpts
-	if options.retryPolicy.AttemptTimeout > 0 {
-		jsOpts = append([]jetstream.JetStreamOpt{jetstream.WithPublishAsyncTimeout(options.retryPolicy.AttemptTimeout)}, jsOpts...)
-	}
-
 	// create jetstream context from nats connection
-	js, err := jetstream.New(nc, jsOpts...)
+	js, err := jetstream.New(nc, options.jsOpts...)
 	if err != nil {
 		nc.Close()
 		return nil, err

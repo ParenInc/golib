@@ -23,9 +23,10 @@ type publishOptions struct {
 type PublishOption func(*publishOptions)
 
 // WithIdempotencyKey sends key as the Nats-Msg-Id header, so the stream drops
-// re-publishes of the same message within its Duplicates window. It also
-// enables retries on timeouts according to the client's RetryPolicy; publishes
-// without a key are never retried, since a retry could store a duplicate.
+// re-publishes of the same message within its Duplicates window. For
+// PublishWithContext it also enables retries on timeouts according to the
+// client's RetryPolicy; publishes without a key are never retried, since a
+// retry could store a duplicate.
 func WithIdempotencyKey(key string) PublishOption {
 	return func(o *publishOptions) {
 		o.idempotencyKey = key
@@ -75,24 +76,14 @@ func (c *Client) PublishWithContext(ctx context.Context, subject string, data []
 
 // PublishAsync enqueues a publish without waiting for the server's PubAck. The
 // returned future resolves once the server acknowledges or rejects the message.
-// With WithIdempotencyKey, timed-out attempts are republished before the future
-// resolves. The number of in-flight publishes can be capped with
-// WithJetStreamOptions(jetstream.WithPublishAsyncMaxPending(n)); enqueue errors
-// such as a full queue are returned immediately and not retried.
+// Async publishes are not retried. The number of in-flight publishes can be
+// capped with WithJetStreamOptions(jetstream.WithPublishAsyncMaxPending(n)).
 func (c *Client) PublishAsync(subject string, data []byte, opts ...PublishOption) (jetstream.PubAckFuture, error) {
 	o := newPublishOptions(opts)
 	if o.idempotencyKey == "" {
 		return c.js.PublishAsync(subject, data)
 	}
-
-	publish := func() (jetstream.PubAckFuture, error) {
-		return c.js.PublishAsync(subject, data, jetstream.WithMsgID(o.idempotencyKey))
-	}
-	first, err := publish()
-	if err != nil {
-		return nil, err
-	}
-	return newRetryingFuture(first, c.retryPolicy, publish, c.logRetry(subject, o.idempotencyKey)), nil
+	return c.js.PublishAsync(subject, data, jetstream.WithMsgID(o.idempotencyKey))
 }
 
 func (c *Client) logRetry(subject, key string) retryFunc {
