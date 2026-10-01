@@ -9,6 +9,7 @@ import (
 
 type Consumer interface {
 	CreateConsumer(stream string, durable string, subjects []string) (jetstream.Consumer, error)
+	CreateOrUpdateConsumer(ctx context.Context, stream string, config jetstream.ConsumerConfig) (jetstream.Consumer, error)
 }
 
 func (c *Client) CreateConsumer(stream string, durable string, subjects []string) (jetstream.Consumer, error) {
@@ -25,5 +26,12 @@ func (c *Client) CreateConsumer(stream string, durable string, subjects []string
 		conf.FilterSubjects = subjects
 	}
 
-	return c.js.CreateOrUpdateConsumer(context.Background(), stream, conf)
+	return c.CreateOrUpdateConsumer(context.Background(), stream, conf)
+}
+
+// CreateOrUpdateConsumer creates or updates a consumer on stream with the given
+// configuration, bounded by ctx. Use it when CreateConsumer's defaults don't fit
+// (e.g. to set MaxAckPending).
+func (c *Client) CreateOrUpdateConsumer(ctx context.Context, stream string, config jetstream.ConsumerConfig) (jetstream.Consumer, error) {
+	return c.js.CreateOrUpdateConsumer(ctx, stream, config)
 }

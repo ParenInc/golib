@@ -5,7 +5,10 @@
 package mocks
 
 import (
+	"context"
+
 	"github.com/nats-io/nats.go/jetstream"
+	"github.com/pareninc/golib/nats"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -15,10 +18,19 @@ func NewMockProducer(t interface {
 	mock.TestingT
 	Cleanup(func())
 }) *MockProducer {
+	if helper, ok := t.(interface{ Helper() }); ok {
+		helper.Helper()
+	}
+
 	mock := &MockProducer{}
 	mock.Mock.Test(t)
 
-	t.Cleanup(func() { mock.AssertExpectations(t) })
+	t.Cleanup(func() {
+		if helper, ok := t.(interface{ Helper() }); ok {
+			helper.Helper()
+		}
+		mock.AssertExpectations(t)
+	})
 
 	return mock
 }
@@ -72,7 +84,7 @@ type MockProducer_CreateOrUpdateStream_Call struct {
 // CreateOrUpdateStream is a helper method to define mock.On call
 //   - streamName string
 //   - subjects []string
-func (_e *MockProducer_Expecter) CreateOrUpdateStream(streamName interface{}, subjects interface{}) *MockProducer_CreateOrUpdateStream_Call {
+func (_e *MockProducer_Expecter) CreateOrUpdateStream(streamName any, subjects any) *MockProducer_CreateOrUpdateStream_Call {
 	return &MockProducer_CreateOrUpdateStream_Call{Call: _e.mock.On("CreateOrUpdateStream", streamName, subjects)}
 }
 
@@ -128,7 +140,7 @@ type MockProducer_EnsureStreamExists_Call struct {
 
 // EnsureStreamExists is a helper method to define mock.On call
 //   - streamName string
-func (_e *MockProducer_Expecter) EnsureStreamExists(streamName interface{}) *MockProducer_EnsureStreamExists_Call {
+func (_e *MockProducer_Expecter) EnsureStreamExists(streamName any) *MockProducer_EnsureStreamExists_Call {
 	return &MockProducer_EnsureStreamExists_Call{Call: _e.mock.On("EnsureStreamExists", streamName)}
 }
 
@@ -138,7 +150,9 @@ func (_c *MockProducer_EnsureStreamExists_Call) Run(run func(streamName string))
 		if args[0] != nil {
 			arg0 = args[0].(string)
 		}
-		run(arg0)
+		run(
+			arg0,
+		)
 	})
 	return _c
 }
@@ -178,7 +192,7 @@ type MockProducer_Publish_Call struct {
 // Publish is a helper method to define mock.On call
 //   - subject string
 //   - data []byte
-func (_e *MockProducer_Expecter) Publish(subject interface{}, data interface{}) *MockProducer_Publish_Call {
+func (_e *MockProducer_Expecter) Publish(subject any, data any) *MockProducer_Publish_Call {
 	return &MockProducer_Publish_Call{Call: _e.mock.On("Publish", subject, data)}
 }
 
@@ -206,6 +220,186 @@ func (_c *MockProducer_Publish_Call) Return(err error) *MockProducer_Publish_Cal
 }
 
 func (_c *MockProducer_Publish_Call) RunAndReturn(run func(subject string, data []byte) error) *MockProducer_Publish_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// PublishAsync provides a mock function for the type MockProducer
+func (_mock *MockProducer) PublishAsync(subject string, data []byte, opts ...nats.PublishOption) (jetstream.PubAckFuture, error) {
+	// nats.PublishOption
+	_va := make([]any, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []any
+	_ca = append(_ca, subject, data)
+	_ca = append(_ca, _va...)
+	ret := _mock.Called(_ca...)
+
+	if len(ret) == 0 {
+		panic("no return value specified for PublishAsync")
+	}
+
+	var r0 jetstream.PubAckFuture
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(string, []byte, ...nats.PublishOption) (jetstream.PubAckFuture, error)); ok {
+		return returnFunc(subject, data, opts...)
+	}
+	if returnFunc, ok := ret.Get(0).(func(string, []byte, ...nats.PublishOption) jetstream.PubAckFuture); ok {
+		r0 = returnFunc(subject, data, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(jetstream.PubAckFuture)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(string, []byte, ...nats.PublishOption) error); ok {
+		r1 = returnFunc(subject, data, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockProducer_PublishAsync_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'PublishAsync'
+type MockProducer_PublishAsync_Call struct {
+	*mock.Call
+}
+
+// PublishAsync is a helper method to define mock.On call
+//   - subject string
+//   - data []byte
+//   - opts ...nats.PublishOption
+func (_e *MockProducer_Expecter) PublishAsync(subject any, data any, opts ...any) *MockProducer_PublishAsync_Call {
+	return &MockProducer_PublishAsync_Call{Call: _e.mock.On("PublishAsync",
+		append([]any{subject, data}, opts...)...)}
+}
+
+func (_c *MockProducer_PublishAsync_Call) Run(run func(subject string, data []byte, opts ...nats.PublishOption)) *MockProducer_PublishAsync_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 string
+		if args[0] != nil {
+			arg0 = args[0].(string)
+		}
+		var arg1 []byte
+		if args[1] != nil {
+			arg1 = args[1].([]byte)
+		}
+		var arg2 []nats.PublishOption
+		variadicArgs := make([]nats.PublishOption, len(args)-2)
+		for i, a := range args[2:] {
+			if a != nil {
+				variadicArgs[i] = a.(nats.PublishOption)
+			}
+		}
+		arg2 = variadicArgs
+		run(
+			arg0,
+			arg1,
+			arg2...,
+		)
+	})
+	return _c
+}
+
+func (_c *MockProducer_PublishAsync_Call) Return(pubAckFuture jetstream.PubAckFuture, err error) *MockProducer_PublishAsync_Call {
+	_c.Call.Return(pubAckFuture, err)
+	return _c
+}
+
+func (_c *MockProducer_PublishAsync_Call) RunAndReturn(run func(subject string, data []byte, opts ...nats.PublishOption) (jetstream.PubAckFuture, error)) *MockProducer_PublishAsync_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// PublishWithContext provides a mock function for the type MockProducer
+func (_mock *MockProducer) PublishWithContext(ctx context.Context, subject string, data []byte, opts ...nats.PublishOption) (*jetstream.PubAck, error) {
+	// nats.PublishOption
+	_va := make([]any, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []any
+	_ca = append(_ca, ctx, subject, data)
+	_ca = append(_ca, _va...)
+	ret := _mock.Called(_ca...)
+
+	if len(ret) == 0 {
+		panic("no return value specified for PublishWithContext")
+	}
+
+	var r0 *jetstream.PubAck
+	var r1 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, []byte, ...nats.PublishOption) (*jetstream.PubAck, error)); ok {
+		return returnFunc(ctx, subject, data, opts...)
+	}
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, []byte, ...nats.PublishOption) *jetstream.PubAck); ok {
+		r0 = returnFunc(ctx, subject, data, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*jetstream.PubAck)
+		}
+	}
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string, []byte, ...nats.PublishOption) error); ok {
+		r1 = returnFunc(ctx, subject, data, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// MockProducer_PublishWithContext_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'PublishWithContext'
+type MockProducer_PublishWithContext_Call struct {
+	*mock.Call
+}
+
+// PublishWithContext is a helper method to define mock.On call
+//   - ctx context.Context
+//   - subject string
+//   - data []byte
+//   - opts ...nats.PublishOption
+func (_e *MockProducer_Expecter) PublishWithContext(ctx any, subject any, data any, opts ...any) *MockProducer_PublishWithContext_Call {
+	return &MockProducer_PublishWithContext_Call{Call: _e.mock.On("PublishWithContext",
+		append([]any{ctx, subject, data}, opts...)...)}
+}
+
+func (_c *MockProducer_PublishWithContext_Call) Run(run func(ctx context.Context, subject string, data []byte, opts ...nats.PublishOption)) *MockProducer_PublishWithContext_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 []byte
+		if args[2] != nil {
+			arg2 = args[2].([]byte)
+		}
+		var arg3 []nats.PublishOption
+		variadicArgs := make([]nats.PublishOption, len(args)-3)
+		for i, a := range args[3:] {
+			if a != nil {
+				variadicArgs[i] = a.(nats.PublishOption)
+			}
+		}
+		arg3 = variadicArgs
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3...,
+		)
+	})
+	return _c
+}
+
+func (_c *MockProducer_PublishWithContext_Call) Return(pubAck *jetstream.PubAck, err error) *MockProducer_PublishWithContext_Call {
+	_c.Call.Return(pubAck, err)
+	return _c
+}
+
+func (_c *MockProducer_PublishWithContext_Call) RunAndReturn(run func(ctx context.Context, subject string, data []byte, opts ...nats.PublishOption) (*jetstream.PubAck, error)) *MockProducer_PublishWithContext_Call {
 	_c.Call.Return(run)
 	return _c
 }
