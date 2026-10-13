@@ -62,14 +62,21 @@ func (p RetryPolicy) backoff(attempt int) time.Duration {
 	return half + rand.N(half+1)
 }
 
+// JSErrCodeStreamDuplicateMessageConflict (JSStreamDuplicateMessageConflict)
+// is returned by clustered streams when a message with the same idempotency
+// key is still being processed. nats.go does not define a constant for it.
+const JSErrCodeStreamDuplicateMessageConflict jetstream.ErrorCode = 10158
+
 // isRetryable reports whether err means the publish may not have been
-// acknowledged (as opposed to the server rejecting it).
+// acknowledged, or was rejected only transiently (as opposed to the server
+// rejecting it for good).
 func isRetryable(err error) bool {
 	return errors.Is(err, context.DeadlineExceeded) ||
 		errors.Is(err, nats.ErrTimeout) ||
 		errors.Is(err, nats.ErrNoResponders) ||
 		errors.Is(err, nats.ErrDisconnected) ||
-		errors.Is(err, jetstream.ErrNoStreamResponse)
+		errors.Is(err, jetstream.ErrNoStreamResponse) ||
+		errors.Is(err, &jetstream.APIError{ErrorCode: JSErrCodeStreamDuplicateMessageConflict})
 }
 
 type retryFunc func(attempt int, err error)

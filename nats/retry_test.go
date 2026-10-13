@@ -3,6 +3,7 @@ package nats
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 
@@ -49,6 +50,29 @@ func TestPublishWithRetry(t *testing.T) {
 		assert.Equal(t, "test", ack.Stream)
 		assert.Equal(t, 3, *calls)
 		assert.Equal(t, []int{1, 2}, retried)
+	})
+
+	t.Run("should retry duplicate message conflicts", func(t *testing.T) {
+		conflict := fmt.Errorf("nats: %w", &jetstream.APIError{
+			Code:        409,
+			ErrorCode:   JSErrCodeStreamDuplicateMessageConflict,
+			Description: "duplicate message id is in process",
+		})
+		publish, calls := syncResults(conflict)
+
+		_, err := publishWithRetry(context.Background(), testPolicy, publish, noopRetry)
+
+		require.NoError(t, err)
+		assert.Equal(t, 2, *calls)
+	})
+
+	t.Run("should not retry other API errors", func(t *testing.T) {
+		publish, calls := syncResults(&jetstream.APIError{Code: 400, ErrorCode: jetstream.JSErrCodeBadRequest})
+
+		_, err := publishWithRetry(context.Background(), testPolicy, publish, noopRetry)
+
+		assert.Error(t, err)
+		assert.Equal(t, 1, *calls)
 	})
 
 	t.Run("should not retry non-retryable errors", func(t *testing.T) {
