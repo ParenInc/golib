@@ -29,6 +29,12 @@ func NewLogger(level string, appName string) *Logger {
 	return &logger
 }
 
+// FromLogrus wraps an already configured logrus entry, so an application
+// keeps its own output and format.
+func FromLogrus(entry *logrus.Entry) *Logger {
+	return &Logger{logger: entry}
+}
+
 func (l *Logger) WithField(key string, value any) *Logger {
 	return &Logger{
 		logger: l.logger.WithField(key, value),
