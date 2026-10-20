@@ -17,6 +17,7 @@ type Producer interface {
 
 type publishOptions struct {
 	idempotencyKey string
+	expectStream   string
 }
 
 // PublishOption customizes a single publish.
@@ -31,6 +32,25 @@ func WithIdempotencyKey(key string) PublishOption {
 	return func(o *publishOptions) {
 		o.idempotencyKey = key
 	}
+}
+
+// WithExpectStream makes the server reject the publish unless the subject is
+// stored in the given stream.
+func WithExpectStream(stream string) PublishOption {
+	return func(o *publishOptions) {
+		o.expectStream = stream
+	}
+}
+
+func (o publishOptions) jetStreamOpts() []jetstream.PublishOpt {
+	var opts []jetstream.PublishOpt
+	if o.idempotencyKey != "" {
+		opts = append(opts, jetstream.WithMsgID(o.idempotencyKey))
+	}
+	if o.expectStream != "" {
+		opts = append(opts, jetstream.WithExpectStream(o.expectStream))
+	}
+	return opts
 }
 
 func newPublishOptions(opts []PublishOption) publishOptions {
@@ -66,11 +86,11 @@ func (c *Client) Publish(subject string, data []byte) error {
 func (c *Client) PublishWithContext(ctx context.Context, subject string, data []byte, opts ...PublishOption) (*jetstream.PubAck, error) {
 	o := newPublishOptions(opts)
 	if o.idempotencyKey == "" {
-		return c.js.Publish(ctx, subject, data)
+		return c.js.Publish(ctx, subject, data, o.jetStreamOpts()...)
 	}
 
 	return publishWithRetry(ctx, c.retryPolicy, func(attemptCtx context.Context) (*jetstream.PubAck, error) {
-		return c.js.Publish(attemptCtx, subject, data, jetstream.WithMsgID(o.idempotencyKey))
+		return c.js.Publish(attemptCtx, subject, data, o.jetStreamOpts()...)
 	}, c.logRetry(subject, o.idempotencyKey))
 }
 
@@ -79,11 +99,7 @@ func (c *Client) PublishWithContext(ctx context.Context, subject string, data []
 // Async publishes are not retried. The number of in-flight publishes can be
 // capped with WithJetStreamOptions(jetstream.WithPublishAsyncMaxPending(n)).
 func (c *Client) PublishAsync(subject string, data []byte, opts ...PublishOption) (jetstream.PubAckFuture, error) {
-	o := newPublishOptions(opts)
-	if o.idempotencyKey == "" {
-		return c.js.PublishAsync(subject, data)
-	}
-	return c.js.PublishAsync(subject, data, jetstream.WithMsgID(o.idempotencyKey))
+	return c.js.PublishAsync(subject, data, newPublishOptions(opts).jetStreamOpts()...)
 }
 
 func (c *Client) logRetry(subject, key string) retryFunc {

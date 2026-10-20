@@ -24,6 +24,7 @@ type Client struct {
 
 type clientOptions struct {
 	jsOpts      []jetstream.JetStreamOpt
+	natsOpts    []nats.Option
 	retryPolicy RetryPolicy
 }
 
@@ -35,6 +36,23 @@ type Option func(*clientOptions)
 func WithJetStreamOptions(opts ...jetstream.JetStreamOpt) Option {
 	return func(o *clientOptions) {
 		o.jsOpts = append(o.jsOpts, opts...)
+	}
+}
+
+// WithConnectionName names the connection, as shown by the server monitoring
+// (e.g. nats server report connections).
+func WithConnectionName(name string) Option {
+	return func(o *clientOptions) {
+		o.natsOpts = append(o.natsOpts, nats.Name(name))
+	}
+}
+
+// WithInboxPrefix replaces the _INBOX prefix of the reply subjects (JetStream
+// API, KV and publish acknowledgements), so the server permissions can keep
+// the replies of the service away from the other users.
+func WithInboxPrefix(prefix string) Option {
+	return func(o *clientOptions) {
+		o.natsOpts = append(o.natsOpts, nats.CustomInboxPrefix(prefix))
 	}
 }
 
@@ -53,7 +71,7 @@ func NewClient(config Configuration, logger Logger, opts ...Option) (*Client, er
 		logger.Warnf("Disconnected: will attempt reconnects: %v", err)
 	}))
 	natsOpts = append(natsOpts, nats.ReconnectHandler(func(nc *nats.Conn) {
-		logger.Infof("Reconnected to %s", nc.ConnectedUrl())
+		logger.Infof("Reconnected to %s", nc.ConnectedUrlRedacted())
 	}))
 	natsOpts = append(natsOpts, nats.ClosedHandler(func(nc *nats.Conn) {
 		logger.Errorf("Exiting, no servers available")
@@ -62,6 +80,7 @@ func NewClient(config Configuration, logger Logger, opts ...Option) (*Client, er
 	if config.User != "" && config.Password != "" {
 		natsOpts = append(natsOpts, nats.UserInfo(config.User, config.Password))
 	}
+	natsOpts = append(natsOpts, options.natsOpts...)
 
 	// connect to nats server
 	nc, err := nats.Connect(config.URL, natsOpts...)
@@ -86,4 +105,17 @@ func NewClient(config Configuration, logger Logger, opts ...Option) (*Client, er
 
 func (c *Client) Close() {
 	c.conn.Close()
+}
+
+// Drain stops the subscriptions, lets the in-flight messages and publishes
+// complete, then closes the connection. It returns without waiting for the
+// connection to be closed.
+func (c *Client) Drain() error {
+	return c.conn.Drain()
+}
+
+// JetStream returns the JetStream context of the client, for the features
+// the client does not wrap (e.g. key-value buckets).
+func (c *Client) JetStream() jetstream.JetStream {
+	return c.js
 }
